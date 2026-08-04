@@ -6,17 +6,19 @@ import { sql } from "drizzle-orm";
  * - low: faible priorité
  * - medium: priorité normale (défaut)
  * - high: haute priorité
+ * - urgent: priorité maximale
  */
-export const PRIORITIES = ["low", "medium", "high"] as const;
+export const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
 export type Priority = (typeof PRIORITIES)[number];
 
 /**
  * Statut d'une tâche (colonne Kanban).
+ * - backlog: Backlog (à trier)
  * - todo: À faire
  * - in-progress: En cours
  * - done: Terminé
  */
-export const STATUSES = ["todo", "in-progress", "done"] as const;
+export const STATUSES = ["backlog", "todo", "in-progress", "done"] as const;
 export type Status = (typeof STATUSES)[number];
 
 /**
@@ -37,9 +39,9 @@ export const SUGGESTED_CATEGORIES = [
  * - id : identifiant unique (UUID v4)
  * - title : titre de la tâche (1-200 caractères, requis)
  * - description : description optionnelle (max 2000 caractères)
- * - priority : niveau d'urgence (low/medium/high, défaut medium)
+ * - priority : niveau d'urgence (low/medium/high/urgent, défaut medium)
  * - category : catégorie libre (nullable)
- * - status : colonne Kanban (todo/in-progress/done, défaut todo)
+ * - status : colonne Kanban (backlog/todo/in-progress/done, défaut todo)
  * - dueDate : date d'échéance au format ISO 8601 (nullable)
  * - position : ordre dans la colonne Kanban (défaut 0)
  * - createdAt : date de création (ISO 8601 datetime)

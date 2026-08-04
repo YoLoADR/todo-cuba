@@ -96,10 +96,22 @@ describe("POST /api/tasks — création d'une tâche", () => {
     expect(data.error).toBeDefined();
   });
 
+  it("crée une tâche avec la priorité 'urgent' → 201", async () => {
+    const req = new Request("http://localhost/api/tasks", {
+      method: "POST",
+      body: JSON.stringify({ title: "Tâche urgente", priority: "urgent" }),
+    });
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(data.priority).toBe("urgent");
+  });
+
   it("retourne 400 si la priorité est invalide", async () => {
     const req = new Request("http://localhost/api/tasks", {
       method: "POST",
-      body: JSON.stringify({ title: "Tâche", priority: "urgent" }),
+      body: JSON.stringify({ title: "Tâche", priority: "critical" }),
     });
     const res = await POST(req);
     const data = await res.json();
