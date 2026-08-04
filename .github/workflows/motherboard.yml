@@ -76,12 +76,12 @@ jobs:
                 // Set team field
                 if (TEAM_FIELD_ID && teamOptId) {
                   await github.graphql(`
-                    mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: ProjectV2FieldValue!) {
+                    mutation updateField($projectId: ID!, $itemId: ID!, $fieldId: ID!) {
                       updateProjectV2ItemFieldValue(input: {
                         projectId: $projectId,
                         itemId: $itemId,
                         fieldId: $fieldId,
-                        value: {singleSelectOptionId: $value}
+                        value: {singleSelectOptionId: "${teamOptId}"}
                       }) {
                         projectV2Item { id }
                       }
@@ -89,20 +89,19 @@ jobs:
                   `, {
                     projectId: PROJECT_NODE_ID,
                     itemId: itemId,
-                    fieldId: TEAM_FIELD_ID,
-                    value: teamOptId
+                    fieldId: TEAM_FIELD_ID
                   });
                 }
 
                 // Set status field
                 if (STATUS_FIELD_ID && COLUMN_OPTIONS[statusName]) {
                   await github.graphql(`
-                    mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: ProjectV2FieldValue!) {
+                    mutation updateStatus($projectId: ID!, $itemId: ID!, $fieldId: ID!) {
                       updateProjectV2ItemFieldValue(input: {
                         projectId: $projectId,
                         itemId: $itemId,
                         fieldId: $fieldId,
-                        value: {singleSelectOptionId: $value}
+                        value: {singleSelectOptionId: "${COLUMN_OPTIONS[statusName]}"}
                       }) {
                         projectV2Item { id }
                       }
@@ -110,8 +109,7 @@ jobs:
                   `, {
                     projectId: PROJECT_NODE_ID,
                     itemId: itemId,
-                    fieldId: STATUS_FIELD_ID,
-                    value: COLUMN_OPTIONS[statusName]
+                    fieldId: STATUS_FIELD_ID
                   });
                 }
 
