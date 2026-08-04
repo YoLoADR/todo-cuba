@@ -35,23 +35,32 @@ jobs:
               'Done':          'DONE_OPTION_ID'
             };
 
-            // Mapping repo → équipe (un repo projet = une équipe)
-            const TEAM_BY_REPO = {
-              'YoLoADR/todo-cuba': 'cuba',
-              'YoLoADR/todo-haiti': 'haiti',
-              'YoLoADR/ai-hirekit': 'guyane'
+            // Mapping repo → équipe option ID (GraphQL)
+            const TEAM_OPTION_BY_REPO = {
+              'YoLoADR/todo-cuba': '0e1df621',   // 🇨🇺 Cuba
+              'YoLoADR/todo-haiti': '5ea48213',   // 🇭🇹 Haiti
+              'YoLoADR/ai-hirekit': '9bd60494'   // 🇬🇫 Guyane
+            };
+
+            // Mapping status → option ID (GraphQL)
+            const COLUMN_OPTIONS = {
+              'Backlog':     'f75ad846',
+              'Ready':       '61e4505c',
+              'In progress': '47fc9ee4',
+              'In review':   'df73e18b',
+              'Done':        '98236657'
             };
 
             // Détermine l'équipe selon le repo
-            function getTeam(repoFullName, labels) {
-              return TEAM_BY_REPO[repoFullName] || 'unknown';
+            function getTeamOptionId(repoFullName) {
+              return TEAM_OPTION_BY_REPO[repoFullName] || null;
             }
 
             const { payload, eventName } = context;
             const repoFullName = context.repo.owner + '/' + context.repo.repo;
-            const team = getTeam(repoFullName, payload.issue?.labels || payload.pull_request?.labels || []);
+            const teamOptionId = getTeamOptionId(repoFullName);
 
-            console.log(`Event: ${eventName}, Repo: ${repoFullName}, Team: ${team}`);
+            console.log(`Event: ${eventName}, Repo: ${repoFullName}, Team option: ${teamOptionId}`);
 
             if (!PROJECT_NODE_ID) {
               console.log('MOTHERBOARD_PROJECT_ID not set — skipping. Create the Project V2 first and set the secret.');
@@ -59,7 +68,7 @@ jobs:
             }
 
             // Ajoute l'issue/PR au Project V2
-            async function addToProject(nodeId, teamName, statusName) {
+            async function addToProject(nodeId, teamOptId, statusName) {
               try {
                 // Add item to project
                 const addResult = await github.graphql(`
@@ -74,7 +83,7 @@ jobs:
                 console.log(`Added item ${itemId} to project`);
 
                 // Set team field
-                if (TEAM_FIELD_ID) {
+                if (TEAM_FIELD_ID && teamOptId) {
                   await github.graphql(`
                     mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: ProjectV2FieldValue!) {
                       updateProjectV2ItemFieldValue(input: {
@@ -90,7 +99,7 @@ jobs:
                     projectId: PROJECT_NODE_ID,
                     itemId: itemId,
                     fieldId: TEAM_FIELD_ID,
-                    value: teamName
+                    value: teamOptId
                   });
                 }
 
@@ -115,7 +124,7 @@ jobs:
                   });
                 }
 
-                console.log(`Set team=${teamName}, status=${statusName}`);
+                console.log(`Set team=${teamOptId}, status=${statusName}`);
               } catch (e) {
                 console.log(`Error adding to project: ${e.message}`);
               }
@@ -123,7 +132,7 @@ jobs:
 
             // Route selon l'événement
             if (eventName === 'issues' && payload.action === 'opened') {
-              await addToProject(payload.issue.node_id, team, 'Backlog');
+              await addToProject(payload.issue.node_id, teamOptionId, 'Backlog');
             } else if (eventName === 'issues' && payload.action === 'labeled') {
               const label = payload.label.name;
               let status = 'Backlog';
@@ -135,7 +144,7 @@ jobs:
             } else if (eventName === 'issues' && payload.action === 'closed') {
               console.log(`Issue closed — should move to Done (item should already be in project)`);
             } else if (eventName === 'pull_request' && payload.action === 'opened') {
-              await addToProject(payload.pull_request.node_id, team, 'In Review');
+              await addToProject(payload.pull_request.node_id, teamOptionId, 'In review');
             } else if (eventName === 'pull_request' && payload.action === 'closed' && payload.pull_request.merged) {
               console.log(`PR merged — should move to Done`);
             }
@@ -148,7 +157,8 @@ jobs:
               const action = payload.action || 'sync';
               const number = payload.issue?.number || payload.pull_request?.number || '';
               const title = (payload.issue?.title || payload.pull_request?.title || '').substring(0, 60);
-              const msg = `[${team}] ${emoji} ${action} #${number} — ${title}`;
+              const teamName = TEAM_OPTION_BY_REPO[repoFullName] ? Object.keys(TEAM_OPTION_BY_REPO).find(k => TEAM_OPTION_BY_REPO[k] === teamOptionId)?.split('/')[1] : 'unknown';
+              const msg = `[${teamName}] ${emoji} ${action} #${number} — ${title}`;
               try {
                 await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
                   method: 'POST',
