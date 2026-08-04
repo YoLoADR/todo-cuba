@@ -26,15 +26,6 @@ jobs:
             const STATUS_FIELD_ID = process.env.MOTHERBOARD_STATUS_FIELD_ID || '';
             const TEAM_FIELD_ID = process.env.MOTHERBOARD_TEAM_FIELD_ID || '';
 
-            // Colonnes du Kanban motherboard
-            const COLUMN_OPTIONS = {
-              'Backlog':       'BACKLOG_OPTION_ID',
-              'Spec Ready':    'SPEC_OPTION_ID',
-              'In Progress':   'PROGRESS_OPTION_ID',
-              'In Review':     'REVIEW_OPTION_ID',
-              'Done':          'DONE_OPTION_ID'
-            };
-
             // Mapping repo → équipe option ID (GraphQL)
             const TEAM_OPTION_BY_REPO = {
               'YoLoADR/todo-cuba': '0e1df621',   // 🇨🇺 Cuba
