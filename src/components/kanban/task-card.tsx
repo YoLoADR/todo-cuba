@@ -55,6 +55,7 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
     <Card
       ref={setNodeRef}
       style={style}
+      data-testid={`task-card-${task.id}`}
       {...attributes}
       {...listeners}
       className="p-4 mb-3 last:mb-0 bg-mrz-bg-elevated border-mrz-border"
@@ -84,6 +85,7 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
               variant="ghost"
               size="sm"
               aria-label="Éditer"
+              data-testid={`edit-task-${task.id}`}
               onClick={() => onEdit(task)}
             >
               <Pencil className="h-4 w-4" />
@@ -94,6 +96,7 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
               variant="ghost"
               size="sm"
               aria-label="Supprimer"
+              data-testid={`delete-task-${task.id}`}
               onClick={() => onDelete(task.id)}
             >
               <Trash2 className="h-4 w-4 text-red-400" />

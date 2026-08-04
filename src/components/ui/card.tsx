@@ -14,6 +14,8 @@ interface CardProps {
   "aria-label"?: string;
   /** Style inline */
   style?: React.CSSProperties;
+  /** Attribut data-testid pour les tests */
+  "data-testid"?: string;
 }
 
 /**
@@ -31,7 +33,7 @@ interface CardProps {
  * ```
  */
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ children, className = "", role, "aria-label": ariaLabel, style }, ref) => {
+  ({ children, className = "", role, "aria-label": ariaLabel, style, "data-testid": dataTestId }, ref) => {
     return (
       <div
         ref={ref}
@@ -39,6 +41,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         role={role}
         aria-label={ariaLabel}
         style={style}
+        data-testid={dataTestId}
       >
         {children}
       </div>
