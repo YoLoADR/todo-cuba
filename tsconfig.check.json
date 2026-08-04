@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "jsx": "preserve"
+  },
+  "include": [
+    "src/components/ui/modal.tsx",
+    "src/components/ui/select.tsx", 
+    "src/lib/focus-trap.ts"
+  ],
+  "exclude": ["node_modules"]
+}
