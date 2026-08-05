@@ -1,15 +1,14 @@
-import Database from "better-sqlite3";
+import { createClient } from "@libsql/client";
 
 /**
  * Script de seed — crée la base et insère des tâches de démo.
  * Usage: npm run db:seed
  */
-function seed() {
-  const db = new Database("./data/todo.db");
-  db.pragma("journal_mode = WAL");
+async function seed() {
+  const client = createClient({ url: "file:data/todo.db" });
 
   // Créer le schéma si nécessaire
-  db.exec(`
+  await client.execute(`
     CREATE TABLE IF NOT EXISTS tasks (
       id TEXT PRIMARY KEY NOT NULL,
       title TEXT NOT NULL,
@@ -25,9 +24,8 @@ function seed() {
   `);
 
   // Vider les tâches existantes
-  db.exec("DELETE FROM tasks;");
+  await client.execute("DELETE FROM tasks;");
 
-  const now = new Date().toISOString();
   const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     .toISOString()
     .split("T")[0];
@@ -75,17 +73,18 @@ function seed() {
     },
   ];
 
-  const stmt = db.prepare(`
-    INSERT INTO tasks (id, title, description, priority, category, status, due_date, position)
-    VALUES (@id, @title, @description, @priority, @category, @status, @due_date, @position)
-  `);
-
   for (const task of tasks) {
-    stmt.run(task);
+    await client.execute({
+      sql: `INSERT INTO tasks (id, title, description, priority, category, status, due_date, position)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [task.id, task.title, task.description, task.priority, task.category, task.status, task.due_date, task.position],
+    });
   }
 
   console.log(`Seed terminé: ${tasks.length} tâches créées`);
-  db.close();
 }
 
-seed();
+seed().catch((err) => {
+  console.error("Seed failed:", err);
+  process.exit(1);
+});

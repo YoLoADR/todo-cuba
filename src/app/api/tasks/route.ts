@@ -33,7 +33,7 @@ export async function GET(request: Request) {
 
   const { priority, status, category, q } = parsed.data;
 
-  const db = getDb();
+  const db = await getDb();
   const conditions = [];
 
   if (priority) {
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
 
-  const db = getDb();
+  const db = await getDb();
   const [created] = await db
     .insert(tasks)
     .values({

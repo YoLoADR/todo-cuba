@@ -8,10 +8,10 @@ import { tasks } from "@/lib/db/schema";
  * Issue #8 — US-1: CRUD — Lister les tâches
  */
 describe("GET /api/tasks — liste des tâches", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     resetDb();
-    const db = getDb();
-    db.delete(tasks).run();
+    const db = await getDb();
+    await db.delete(tasks);
   });
 
   it("retourne un tableau vide quand il n'y a pas de tâches → 200", async () => {
@@ -25,7 +25,7 @@ describe("GET /api/tasks — liste des tâches", () => {
   });
 
   it("retourne toutes les tâches triées par status puis position → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
 
     // Insert tasks in reverse order to verify sorting
@@ -50,7 +50,7 @@ describe("GET /api/tasks — liste des tâches", () => {
   });
 
   it("filtre par status → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
 
     await db.insert(tasks).values([
@@ -69,7 +69,7 @@ describe("GET /api/tasks — liste des tâches", () => {
   });
 
   it("filtre par priority → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
 
     await db.insert(tasks).values([
@@ -87,7 +87,7 @@ describe("GET /api/tasks — liste des tâches", () => {
   });
 
   it("filtre par category → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
 
     await db.insert(tasks).values([
@@ -105,7 +105,7 @@ describe("GET /api/tasks — liste des tâches", () => {
   });
 
   it("recherche texte (q) sur title → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
 
     await db.insert(tasks).values([
@@ -124,7 +124,7 @@ describe("GET /api/tasks — liste des tâches", () => {
   });
 
   it("recherche texte (q) sur description → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
 
     await db.insert(tasks).values([
@@ -142,7 +142,7 @@ describe("GET /api/tasks — liste des tâches", () => {
   });
 
   it("combine plusieurs filtres → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
 
     await db.insert(tasks).values([

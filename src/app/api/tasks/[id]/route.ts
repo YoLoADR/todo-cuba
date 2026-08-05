@@ -14,7 +14,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const db = getDb();
+  const db = await getDb();
 
   const task = await db.query.tasks.findFirst({
     where: eq(tasks.id, id),
@@ -59,7 +59,7 @@ export async function PATCH(
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const db = getDb();
+  const db = await getDb();
 
   // Vérifie que la tâche existe
   const existing = await db.query.tasks.findFirst({
@@ -98,7 +98,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const db = getDb();
+  const db = await getDb();
 
   const existing = await db.query.tasks.findFirst({
     where: eq(tasks.id, id),

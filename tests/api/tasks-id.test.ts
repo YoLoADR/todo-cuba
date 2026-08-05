@@ -2,20 +2,21 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { GET, PATCH, DELETE } from "@/app/api/tasks/[id]/route";
 import { getDb, resetDb } from "@/lib/db/client";
 import { tasks } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * Tests d'intégration API — GET/PATCH/DELETE /api/tasks/:id
  * Issue #9 — US-1: CRUD — Lire, modifier, supprimer une tâche
  */
 describe("GET /api/tasks/:id — lecture d'une tâche", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     resetDb();
-    const db = getDb();
-    db.delete(tasks).run();
+    const db = await getDb();
+    await db.delete(tasks);
   });
 
   it("retourne la tâche si elle existe → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
@@ -50,14 +51,14 @@ describe("GET /api/tasks/:id — lecture d'une tâche", () => {
 });
 
 describe("PATCH /api/tasks/:id — mise à jour partielle", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     resetDb();
-    const db = getDb();
-    db.delete(tasks).run();
+    const db = await getDb();
+    await db.delete(tasks);
   });
 
   it("met à jour le titre → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
@@ -86,7 +87,7 @@ describe("PATCH /api/tasks/:id — mise à jour partielle", () => {
   });
 
   it("met à jour le status → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
@@ -112,7 +113,7 @@ describe("PATCH /api/tasks/:id — mise à jour partielle", () => {
   });
 
   it("met à jour plusieurs champs → 200", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
@@ -159,7 +160,7 @@ describe("PATCH /api/tasks/:id — mise à jour partielle", () => {
   });
 
   it("retourne 400 si le body est invalide (titre vide)", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
@@ -185,7 +186,7 @@ describe("PATCH /api/tasks/:id — mise à jour partielle", () => {
   });
 
   it("retourne 400 si le body est invalide (priorité invalide)", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
@@ -211,7 +212,7 @@ describe("PATCH /api/tasks/:id — mise à jour partielle", () => {
   });
 
   it("retourne 400 si le body n'est pas du JSON valide", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
@@ -238,14 +239,14 @@ describe("PATCH /api/tasks/:id — mise à jour partielle", () => {
 });
 
 describe("DELETE /api/tasks/:id — suppression d'une tâche", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     resetDb();
-    const db = getDb();
-    db.delete(tasks).run();
+    const db = await getDb();
+    await db.delete(tasks);
   });
 
   it("supprime la tâche et retourne 204", async () => {
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
@@ -267,7 +268,7 @@ describe("DELETE /api/tasks/:id — suppression d'une tâche", () => {
     expect(res.status).toBe(204);
 
     // Verify it's actually deleted
-    const task = await db.query.tasks.findFirst({ where: (t, { eq }) => eq(t.id, id) });
+    const task = await db.query.tasks.findFirst({ where: eq(tasks.id, id) });
     expect(task).toBeUndefined();
   });
 

@@ -9,12 +9,12 @@ import { resetDb } from "@/lib/db/client";
  * Issue #7 — US-1: CRUD — Créer une tâche
  */
 describe("POST /api/tasks — création d'une tâche", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     // Réinitialise la DB en mémoire avant chaque test pour l'isolation
     resetDb();
     // Nettoie la table (au cas où le singleton n'a pas été reset)
-    const db = getDb();
-    db.delete(tasks).run();
+    const db = await getDb();
+    await db.delete(tasks);
   });
 
   it("crée une tâche avec un titre uniquement → 201, status todo, priority medium", async () => {
