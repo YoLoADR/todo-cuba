@@ -5,13 +5,24 @@ import { dirname, resolve } from "node:path";
 import * as schema from "./schema";
 
 /**
+ * Détecte si on tourne dans un environnement serverless (AWS Lambda / Netlify).
+ * Le cwd est /var/task et seul /tmp est inscriptible.
+ */
+const IS_SERVERLESS = !!(
+  process.env.NETLIFY ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT ||
+  process.cwd() === "/var/task"
+);
+
+/**
  * Chemin de la base de données SQLite.
  * Configurable via DB_PATH, sinon ./data/todo.db par défaut.
  * En serverless (Netlify), le filesystem est en lecture seule sauf /tmp:
  * on utilise /tmp/todo.db pour pouvoir écrire.
  */
 const DB_PATH = process.env.DB_PATH ?? (
-  process.env.NETLIFY
+  IS_SERVERLESS
     ? "/tmp/todo.db"
     : resolve(process.cwd(), "data/todo.db")
 );
@@ -56,7 +67,7 @@ export function getDb() {
     dbInstance = drizzle(sqlite, { schema });
     // En serverless (Netlify), le FS est éphémère: initialiser le schéma + seed
     // à chaque cold start car /tmp est propre à l'instance Lambda.
-    if (process.env.NETLIFY) {
+    if (IS_SERVERLESS) {
       createSchema(sqlite);
       seedIfEmpty(sqlite);
     }
