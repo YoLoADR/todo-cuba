@@ -7,8 +7,14 @@ import * as schema from "./schema";
 /**
  * Chemin de la base de données SQLite.
  * Configurable via DB_PATH, sinon ./data/todo.db par défaut.
+ * En serverless (Netlify), le filesystem est en lecture seule sauf /tmp:
+ * on utilise /tmp/todo.db pour pouvoir écrire.
  */
-const DB_PATH = process.env.DB_PATH ?? resolve(process.cwd(), "data/todo.db");
+const DB_PATH = process.env.DB_PATH ?? (
+  process.env.NETLIFY
+    ? "/tmp/todo.db"
+    : resolve(process.cwd(), "data/todo.db")
+);
 
 /**
  * S'assure que le répertoire parent existe.
@@ -48,6 +54,12 @@ export function getDb() {
     sqlite.pragma("journal_mode = WAL");
     sqlite.pragma("foreign_keys = ON");
     dbInstance = drizzle(sqlite, { schema });
+    // En serverless (Netlify), le FS est éphémère: initialiser le schéma + seed
+    // à chaque cold start car /tmp est propre à l'instance Lambda.
+    if (process.env.NETLIFY) {
+      createSchema(sqlite);
+      seedIfEmpty(sqlite);
+    }
   }
   return dbInstance;
 }
@@ -73,6 +85,31 @@ function createSchema(sqlite: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority);
     CREATE INDEX IF NOT EXISTS idx_tasks_category ON tasks(category);
   `);
+}
+
+/**
+ * Insère des tâches de démo si la table est vide (serverless cold start).
+ */
+function seedIfEmpty(sqlite: Database.Database): void {
+  const row = sqlite.prepare("SELECT COUNT(*) as cnt FROM tasks").get() as { cnt: number };
+  if (row.cnt > 0) return;
+
+  const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
+  const demoTasks = [
+    { id: crypto.randomUUID(), title: "Préparer le rapport Q3", description: "Finaliser et envoyer le rapport trimestriel", priority: "high", category: "Travail", status: "todo", due_date: dueDate, position: 0 },
+    { id: crypto.randomUUID(), title: "Acheter du lait", description: "Penser au lait d'amande", priority: "low", category: "Courses", status: "todo", due_date: null, position: 1 },
+    { id: crypto.randomUUID(), title: "Réviser le design system", description: "Vérifier la conformité Merenza", priority: "medium", category: "Travail", status: "in-progress", due_date: null, position: 0 },
+    { id: crypto.randomUUID(), title: "Réservation dentiste", description: "Appeler pour rendez-vous", priority: "medium", category: "Santé", status: "done", due_date: null, position: 0 },
+  ];
+
+  const stmt = sqlite.prepare(`
+    INSERT INTO tasks (id, title, description, priority, category, status, due_date, position)
+    VALUES (@id, @title, @description, @priority, @category, @status, @due_date, @position)
+  `);
+  for (const t of demoTasks) stmt.run(t);
 }
 
 /**
